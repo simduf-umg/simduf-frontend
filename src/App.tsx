@@ -10,6 +10,7 @@ import Home from "./pages/Dashboard/Home";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/common/LoadingScreen";
 import Empleados from "./pages/Empleados";
+import RoleBasedGuard from "./components/auth/RoleBasedGuard";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -31,20 +32,56 @@ export default function App() {
       <AuthProvider>
         <ScrollToTop />
         <Routes>
-          {/* Ruta pública */}
+          {/* Rutas públicas */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Rutas protegidas */}
-          <Route element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }>
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* Rutas accesibles para todos los usuarios autenticados */}
             <Route index path="/" element={<Home />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendario" element={<Calendar />} />
-            <Route path="/empleados" element={<Empleados />} />
+            
+            {/* Rutas protegidas solo para ADMIN */}
+            <Route
+              path="/empleados"
+              element={
+                <RoleBasedGuard allowedRoles={["ADMIN"]} redirectTo="/">
+                  <Empleados />
+                </RoleBasedGuard>
+              }
+            />
+            <Route
+              path="/usuarios"
+              element={
+                <RoleBasedGuard allowedRoles={["ADMIN"]} redirectTo="/">
+                  <UserProfiles />
+                </RoleBasedGuard>
+              }
+            />
+            <Route
+              path="/roles"
+              element={
+                <RoleBasedGuard allowedRoles={["ADMIN"]} redirectTo="/">
+                  <UserProfiles />
+                </RoleBasedGuard>
+              }
+            />
+            <Route
+              path="/boveda"
+              element={
+                <RoleBasedGuard allowedRoles={["ADMIN"]} redirectTo="/">
+                  <UserProfiles />
+                </RoleBasedGuard>
+              }
+            />
           </Route>
 
           {/* Ruta de fallback */}

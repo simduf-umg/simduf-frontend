@@ -6,7 +6,7 @@ export default function ResetPassword() {
   return (
     <>
       <PageMeta
-        title="SIMDUF - Restablecer Contraseña"
+        title="SIMDUF | Restablecer Contraseña"
         description="Página de restablecimiento de contraseña para SIMDUF"
       />
       <AuthLayout>
