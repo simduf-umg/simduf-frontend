@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
+import ResetPassword from "./pages/AuthPages/ResetPassword";
 import NotFound from "./pages/OtherPage/NotFound";
 import UserProfiles from "./pages/UserProfiles";
 import Calendar from "./pages/Calendar";
@@ -32,6 +33,7 @@ export default function App() {
         <Routes>
           {/* Ruta pública */}
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Rutas protegidas */}
           <Route element={
