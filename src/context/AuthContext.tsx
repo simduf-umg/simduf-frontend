@@ -24,11 +24,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
+    const verifyToken = async () => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        try {
+          // Intenta hacer una petición al backend para verificar el token
+          const response = await fetch(`${API_URL}/auth/verify`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            setIsAuthenticated(true);
+          } else {
+            // Si el token no es válido, lo eliminamos
+            localStorage.removeItem('access_token');
+            setIsAuthenticated(false);
+          }
+        } catch (error) {
+          console.error('Error al verificar el token:', error);
+          localStorage.removeItem('access_token');
+          setIsAuthenticated(false);
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+      setLoading(false);
+    };
+
+    verifyToken();
   }, []);
 
   const login = async (username: string, password: string) => {
