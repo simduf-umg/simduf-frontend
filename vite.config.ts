@@ -14,5 +14,5 @@ export default defineConfig({
         namedExport: "ReactComponent",
       },
     }),
-  ],
+  ]
 });

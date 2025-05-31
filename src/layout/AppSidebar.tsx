@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-
-// Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
   CalenderIcon,
@@ -14,79 +12,101 @@ import {
   TaskIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import { useAuth } from "../context/AuthContext";
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  roles?: string[];
+  subItems?: { 
+    name: string; 
+    path: string; 
+    pro?: boolean; 
+    new?: boolean;
+    roles?: string[];
+  }[];
 };
 
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    path: "/"
+    path: "/",
+    roles: ["ADMIN", "USER"]
   },
   {
     icon: <CalenderIcon />,
     name: "Calendario",
     path: "/calendario",
+    roles: ["ADMIN", "USER"]
   },
   {
     icon: <ListIcon />,
     name: "Solicitudes",
     path: "/solicitudes",
+    roles: ["ADMIN", "USER"]
   },
   {
     icon: <BoxCubeIcon />,
     name: "Boveda",
     path: "/boveda",
+    roles: ["ADMIN"]
   },
   {
     icon: <TaskIcon />,
     name: "Empleados",
     path: "/empleados",
+    roles: ["ADMIN"]
   },
   {
     icon: <UserCircleIcon />,
     name: "Usuarios",
     path: "/usuarios",
+    roles: ["ADMIN"]
   },
   {
     icon: <TableIcon />,
     name: "Roles",
     path: "/roles",
+    roles: ["ADMIN"]
   },
 ];
 
-const othersItems: NavItem[] = [
-
-];
+const othersItems: NavItem[] = [];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+  const { hasRole } = useAuth();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
   );
 
+  // Filtrar elementos del menú según los roles del usuario
+  const filteredNavItems = navItems.filter(item => {
+    if (!item.roles) return true;
+    return item.roles.some(role => hasRole(role));
+  });
+
+  const filteredOthersItems = othersItems.filter(item => {
+    if (!item.roles) return true;
+    return item.roles.some(role => hasRole(role));
+  });
+
   useEffect(() => {
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      const items = menuType === "main" ? filteredNavItems : filteredOthersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -105,7 +125,7 @@ const AppSidebar: React.FC = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [location, isActive]);
+  }, [location, isActive, filteredNavItems, filteredOthersItems]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -209,44 +229,46 @@ const AppSidebar: React.FC = () => {
               }}
             >
               <ul className="mt-2 space-y-1 ml-9">
-                {nav.subItems.map((subItem) => (
-                  <li key={subItem.name}>
-                    <Link
-                      to={subItem.path}
-                      className={`menu-dropdown-item ${
-                        isActive(subItem.path)
-                          ? "menu-dropdown-item-active"
-                          : "menu-dropdown-item-inactive"
-                      }`}
-                    >
-                      {subItem.name}
-                      <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            new
-                          </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            pro
-                          </span>
-                        )}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
+                {nav.subItems
+                  .filter(subItem => !subItem.roles || subItem.roles.some(role => hasRole(role)))
+                  .map((subItem) => (
+                    <li key={subItem.name}>
+                      <Link
+                        to={subItem.path}
+                        className={`menu-dropdown-item ${
+                          isActive(subItem.path)
+                            ? "menu-dropdown-item-active"
+                            : "menu-dropdown-item-inactive"
+                        }`}
+                      >
+                        {subItem.name}
+                        <span className="flex items-center gap-1 ml-auto">
+                          {subItem.new && (
+                            <span
+                              className={`ml-auto ${
+                                isActive(subItem.path)
+                                  ? "menu-dropdown-badge-active"
+                                  : "menu-dropdown-badge-inactive"
+                              } menu-dropdown-badge`}
+                            >
+                              new
+                            </span>
+                          )}
+                          {subItem.pro && (
+                            <span
+                              className={`ml-auto ${
+                                isActive(subItem.path)
+                                  ? "menu-dropdown-badge-active"
+                                  : "menu-dropdown-badge-inactive"
+                              } menu-dropdown-badge`}
+                            >
+                              pro
+                            </span>
+                          )}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
               </ul>
             </div>
           )}
@@ -283,16 +305,26 @@ const AppSidebar: React.FC = () => {
               </h2>
             </>
           ) : (
-            <img
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
+            <div>
+              <img
+                src="/logo-azul.png"
+                alt="SIMDUF"
+                width={32}
+                height={32}
+                className="dark:hidden"
+              />
+              <img
+                src="/logo-blanco.png"
+                alt="SIMDUF"
+                width={32}
+                height={32}
+                className="hidden dark:block"
+              />
+            </div>
           )}
         </Link>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div className="flex-1 overflow-y-auto">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             <div>
@@ -309,7 +341,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots className="size-6" />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(filteredNavItems, "main")}
             </div>
           </div>
         </nav>
