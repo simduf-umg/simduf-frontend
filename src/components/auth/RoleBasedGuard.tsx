@@ -13,7 +13,7 @@ export const RoleBasedGuard = ({
   allowedRoles,
   redirectTo = '/'
 }: RoleBasedGuardProps) => {
-  const { user, hasRole } = useAuth();
+  const { hasRole } = useAuth();
 
   const hasRequiredRole = allowedRoles.some(role => hasRole(role));
 
